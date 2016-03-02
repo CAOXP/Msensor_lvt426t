@@ -26,7 +26,7 @@
 
  */
 #include "xpSoftwareSerial.h"
-
+#include "config.h"
 
 SoftwareSerial Ser2Lvt(10, 11); // RX, TX
 SoftwareSerial portTwo(8, 9);
@@ -40,11 +40,12 @@ const char cmdstr_rdZero[] = { 0x68, 0x04, 0x00, 0x0d, 0x11};
 const char cmdstr_stZero[] = { 0x68, 0x05, 0x00, 0x05, 0x00, 0x0A};
 
 unsigned char dataXYstr[6];
-unsigned char rcvStr[20];
 
-void sencCMD(const char * str)
+
+bool readCMD(const char * str)
 {
-  //flush the data in RX buffer.
+  
+  //1.flush the data in RX buffer.
   uint8_t i = 0;
   while ( Ser2Lvt.available() > 0 )
   {
@@ -54,31 +55,26 @@ void sencCMD(const char * str)
     #endif
   }
 
-  #if DEBUG
+  #if DEBUG == 1
   Serial.print("Ser2Lvt:flush data:");
   Serial.println(i, DEC);
   #endif
 
-  // send command
+  //2.send command
   i = str[1] + 1;
   while (i--)
   {
     Ser2Lvt.write(*(str++));
     delay(1);
   }
-}
 
-
-
-
-uint8_t readCMD()
-{
-  uint8_t i = 0;
-  //waiting for data back
+  i = 0;
+  //3.waiting for data back
   while ( !(Ser2Lvt.available() > 0 ) )
   {;}
 
-  //read data
+  //4.read data
+  unsigned char rcvStr[20];
   while ( Ser2Lvt.available() > 0 )
   {
     rcvStr[i] = Ser2Lvt.read();
@@ -87,10 +83,14 @@ uint8_t readCMD()
     if (i > 20)
     {
       //data too long
-      return 0;
+      return false;
     }
   }
 
+  //check data ok
+  //
+
+  //set data
   dataXYstr[0] = rcvStr[4];
   dataXYstr[1] = rcvStr[5];
   dataXYstr[2] = rcvStr[6];
@@ -98,13 +98,12 @@ uint8_t readCMD()
   dataXYstr[4] = rcvStr[8];
   dataXYstr[5] = rcvStr[9];
 
-  return 1;
+  return true;
 }
 
 void loop()
 {
-  sencCMD(cmdstr_rdXY);
-  if (readCMD())
+  if (readCMD(cmdstr_rdXY))
   {
     uint8_t i = 0;
     while (i < 6)
