@@ -29,22 +29,49 @@
 #include "config.h"
 
 SoftwareSerial Ser2Lvt(10, 11); // RX, TX
-SoftwareSerial portTwo(8, 9);
+SoftwareSerial Ser2Rf(8, 9);
 
 
+void setup()
+{
+  // Open serial communications and wait for port to open:
+  Serial.begin(9600);
+  while (!Serial)
+  {
+    ; // wait for serial port to connect. Needed for Leonardo only
+  }
 
-const char cmdstr_rdX   [] = { 0x68, 0x04, 0x00, 0x01, 0x0d};
-const char cmdstr_rdY   [] = { 0x68, 0x04, 0x00, 0x02, 0x06};
-const char cmdstr_rdXY  [] = { 0x68, 0x04, 0x00, 0x04, 0x08};
-const char cmdstr_rdZero[] = { 0x68, 0x04, 0x00, 0x0d, 0x11};
-const char cmdstr_stZero[] = { 0x68, 0x05, 0x00, 0x05, 0x00, 0x0A};
+  Ser2Lvt.begin(9600);
+  Ser2Rf.begin(9600);
+}
 
 unsigned char dataXYstr[6];
-
-
-bool readCMD(const char * str)
+void loop()
 {
-  
+  readXYangle();
+
+  delay(2000);
+}
+
+
+
+
+
+
+
+
+
+
+//const char cmdstr_rdX   [] = { 0x68, 0x04, 0x00, 0x01, 0x0d};
+//const char cmdstr_rdY   [] = { 0x68, 0x04, 0x00, 0x02, 0x06};
+const char cmdstr_rdXY  [] = { 0x68, 0x04, 0x00, 0x04, 0x08};
+//const char cmdstr_rdZero[] = { 0x68, 0x04, 0x00, 0x0d, 0x11};
+//const char cmdstr_stZero[] = { 0x68, 0x05, 0x00, 0x05, 0x00, 0x0A};
+
+bool readXYangle()
+{
+  //0.set listen()ing
+  Ser2Lvt.listen();
   //1.flush the data in RX buffer.
   uint8_t i = 0;
   while ( Ser2Lvt.available() > 0 )
@@ -56,11 +83,13 @@ bool readCMD(const char * str)
   }
 
   #if DEBUG == 1
+  Serial.println();
   Serial.print("Ser2Lvt:flush data:");
   Serial.println(i, DEC);
   #endif
 
   //2.send command
+  const char * str = cmdstr_rdXY;
   i = str[1] + 1;
   while (i--)
   {
@@ -87,10 +116,10 @@ bool readCMD(const char * str)
     }
   }
 
-  //check data ok
+  //5.check data ok
   //
 
-  //set data
+  //6.store data
   dataXYstr[0] = rcvStr[4];
   dataXYstr[1] = rcvStr[5];
   dataXYstr[2] = rcvStr[6];
@@ -98,39 +127,21 @@ bool readCMD(const char * str)
   dataXYstr[4] = rcvStr[8];
   dataXYstr[5] = rcvStr[9];
 
+  #if DEBUG == 1
+  Serial.print("   X:");
+  if(dataXYstr[0]==0x10) Serial.print("-");
+  Serial.print(dataXYstr[1], HEX);
+  Serial.print(".");
+  Serial.print(dataXYstr[2], HEX);
+
+  Serial.print(";  Y:");
+  if(dataXYstr[3]==0x10) Serial.print("-");
+  Serial.print(dataXYstr[4], HEX);
+  Serial.print(".");
+  Serial.print(dataXYstr[5], HEX);
+
+  Serial.println();
+  #endif
+
   return true;
 }
-
-void loop()
-{
-  if (readCMD(cmdstr_rdXY))
-  {
-    uint8_t i = 0;
-    while (i < 6)
-    {
-      Serial.print(dataXYstr[i++], HEX);
-      Serial.print(",");
-    }
-    Serial.println();
-  }
-  else
-  {
-  }
-
-  delay(2000);
-}
-
-
-
-void setup()
-{
-  // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial)
-  {
-    ; // wait for serial port to connect. Needed for Leonardo only
-  }
-
-  Ser2Lvt.begin(9600);
-}
-
