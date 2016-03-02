@@ -29,6 +29,11 @@
 #include "config.h"
 
 SoftwareSerial Ser2Lvt(10, 11); // RX, TX
+
+
+//将两个无线模块的地址等所有参数配置为相同的，AUX接地后上电。
+//工作在透传模式下。
+//直接数据对发即可。
 SoftwareSerial Ser2Rf(8, 9);
 
 
