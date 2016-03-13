@@ -1,3 +1,8 @@
 
 
-#define		DEBUG		1
+#define		DEBUG				1
+
+
+#define		RF_TRANSPANRENT		1
+#define		RF_RECEIVE_ADDRSS_HIGH_BYTE		0x12
+#define		RF_RECEIVE_ADDRSS_LOW_BYTE		0x34
